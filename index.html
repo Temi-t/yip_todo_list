@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <link rel="stylesheet" href="style.css"> -->
+    <style>
+        *{
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body{
+            width: auto;
+            background: greenyellow;
+            /* background: white; */
+            margin: 0 auto;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10px;
+            color: #444;
+
+        }
+        h1{
+            text-align: center;
+            margin-top: 5rem;
+            font-size: 3rem;
+        }
+        .container{
+            margin-top: 10rem;
+            width: 36rem;
+            height: 10rem;
+            margin: auto;
+            /* transition: all 560ms; */
+            /* background: pink; */
+        }
+        #inputField{
+            width: 30rem;
+            height: 5rem;
+            color: #444;
+            /* background: red; */
+            border: 1px solid grey;
+            outline-color: goldenrod;
+            font-size: 3rem;
+            vertical-align: middle;
+            padding: 1rem;
+        }
+        #addToDoBtn{
+            height: 5rem;
+            width: 5.5rem;
+            vertical-align: middle;
+            font-size: 4rem;
+            color: goldenrod;
+        }
+        .to-dos{
+            margin: 3rem auto;
+            background-color: rgba(32, 31, 31, 0.3);
+            border: 1px solid green;
+            color: #fff;
+            width: 36rem;
+
+        }
+        .list-name{
+            padding: 0.5rem;
+            margin: 1rem;
+            cursor: pointer;
+            font-size: 3rem;
+            background-color:rgba(8, 116, 8, 0.3);
+            overflow: auto;
+            transition: all 1000ms;
+        }
+        .completed{
+            color: yellow;
+            background: rgba(41, 27, 2, 0.3);
+            text-decoration: line-through;
+            text-decoration-color: black;
+
+        }
+        #bin{
+            font-size: 3rem;
+            color: yellow;
+            margin: 10rem auto;
+            min-height: 20rem;
+            padding: 1rem;
+            width: 35rem;
+            background-color:rgba(8, 116, 8, 0.3);
+            transition: all 560ms; 
+            text-align: center; 
+        }
+        #bin:hover{
+            transform: scale(1.05)
+        }
+
+        #bin span{
+            color: purple;
+        }
+        .bin-head{
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid purple;
+        }
+        #clear-bin{
+            font-size: 2rem;
+            border: none;
+            outline-width: 0.2px;
+            background-color: lightgray;
+            color: rgb(102, 74, 4);
+            margin: auto;
+            padding: 0.5rem;
+        }
+        #saveTodoBtn{
+            margin: 1rem 32% 1rem ;
+            /* margin-left: 40%; */
+            font-size: 2rem;
+            border: none;
+            outline-width: 0.2px;
+            width: 12rem;
+            background-color: lightgray;
+            color: rgb(102, 74, 4);
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-items: center;
+        }
+        .drag-tilt{
+            transform: rotate(20deg)
+        }
+        .descriptions{
+            color: yellow;
+            font-size: 3rem;
+            background: rgba(41, 27, 2, 0.2);
+            text-align: left;
+
+        }
+        p {
+            font-size: 3rem;
+            /* text-align: center; */
+        }
+        ul{
+            list-style: none;
+        }
+        .descriptions li{
+            padding-left: 3rem;
+        }
+        .how-to-use{
+            margin: 3rem auto;
+            background-color: rgba(32, 31, 31, 0.3);
+            border: 1px solid green;
+            color: purple;
+            width: 36rem;
+        }
+        .how-to-use p{
+            padding-left: 7rem;
+        }
+    </style>
+
+    <title>To Do  List</title>
+    </head>
+    <body onload="getList()">
+
+        <h1>To do List</h1>
+        <div class="container">
+            <form  data-new-list-form >
+                <input type="text" id="inputField" name="task" placeholder="I want to...🏋"  data-new-list-input  required> 
+                <button  type="button" id='addToDoBtn'>+</button>
+            </form>
+        </div>
+        <div class='to-dos' >
+            <ul id='toDoContainer'></ul>
+        </div>
+        
+        <div id='bin'>
+            <div class='bin-head'>
+                <span>😷Trash Bin</span> 
+                <button id="clear-bin">Clear trash🗑</button>
+            </div>
+        </div>
+
+        <div class='how-to-use' >
+            <p class="bin-head">How to use 📜</p>
+            <ul class='descriptions'>
+                <li> ✏ Add task +</li>
+                <li> ✏ click task to complete</li>
+                <li> ✏ drag to trash bin</li>
+            </ul>
+        </div>
+
+
+        <script type='text/javascript'>
+
+
+            let addToDoButton = document.getElementById('addToDoBtn');
+            let toDoContainer = document.getElementById('toDoContainer');
+            let inputField = document.getElementById('inputField');
+            let bin = document.getElementById('bin');
+            let clearBin = document.getElementById('clear-bin');
+            let newListForm = document.querySelector('[data-new-list-form]');
+            let newListInput = document.querySelector('[data-new-list-input]');
+            let draggedItem;
+    
+            // '.' in task.lists prevents localstorage overwriting
+            const localStorageListKey = 'task.lists';
+            const localStorageSelectedListIdKey = 'task.selectedListId';
+            const localStorageBinKey = 'task.bin'
+    
+            let lists = JSON.parse(localStorage.getItem(localStorageListKey)) || [];
+            let selectedListId = localStorage.getItem(localStorageSelectedListIdKey);
+            let selectedBinList =  JSON.parse(localStorage.getItem(localStorageBinKey)) || [];
+            
+    
+        
+    
+            addToDoButton.addEventListener('click', () =>{
+            const listName = newListInput.value
+            if(listName === null || listName === '') return
+            const list = createList(listName)
+            setTimeout(()=>{
+                newListInput.value = null
+            }, 0)
+            lists.push(list)
+            saveAndRender()
+            });
+    
+            function createList(name){
+               return {id: Date.now().toString(), name: name , tasks: []}
+            }
+    
+            function save() {
+                localStorage.setItem(localStorageListKey, JSON.stringify(lists))
+            }
+            function saveBinItem(){
+                localStorage.setItem(localStorageBinKey, JSON.stringify(binList))
+            }
+            function saveAndRender() {
+                save()
+                render() 
+            }
+    
+            function render(){
+                clearElement(toDoContainer)
+                lists.forEach(list => {
+                    const listElement = document.createElement('li')
+                    listElement.dataset.listId = list.id;
+                    listElement.classList.add('list-name')
+                    listElement.innerText = list.name;
+                    
+                    listElement.addEventListener('click', ()=>{
+                        listElement.classList.contains('completed') ? listElement.classList.remove('completed') : listElement.classList.add('completed');
+                    })
+    
+                    //Drag section
+                    listElement.setAttribute('draggable', 'true')
+                    listElement.addEventListener('dragstart', () => {
+                        draggedItem = listElement;
+                        setTimeout(()=>{
+                            draggedItem.style.display = 'none'
+                        }, 0)
+                    })
+    
+                    listElement.addEventListener('dragend', () => {
+                        setTimeout(()=>{
+                            draggedItem.style.display = 'block'
+                            draggedItem = null
+                        }, 0)
+                    })
+                    //drop Item
+                    bin.addEventListener('dragover', e => e.preventDefault())
+                    bin.addEventListener('dragenter', e => e.preventDefault())
+                    bin.addEventListener('drop', e => {
+                        e.preventDefault()
+                        bin.append(draggedItem)
+                        // let draggedContent = draggedItem.innerText;
+                        // console.log('dragged content: ' + draggedContent)
+                    })
+                    //clear bin
+                    clearBin.addEventListener('click', ()=>{
+                        localStorage.clear()
+                        clearElement(listElement)
+                        location.reload();
+                    })
+    
+                    toDoContainer.appendChild(listElement)
+                });
+            }
+            function clearElement(element){
+                while(element.firstChild){
+                    element.removeChild(element.firstChild)
+                }
+            }
+    
+            function getList() {
+                lists = JSON.parse(localStorage.getItem(localStorageListKey)) || [];
+                render()
+            }
+    
+            
+        </script>
+    </body>
+</html>
